@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useCallback, useEffect, useState } from 'react'
-import { ExternalLink, Play, RotateCw, Settings } from 'lucide-react'
+import { ExternalLink, RotateCw, Settings } from 'lucide-react'
 import type { Creator } from '@/components/wheel'
 import { Wheel } from '@/components/wheel'
 import { SpinHistory } from '@/components/spin-history'
@@ -380,18 +380,10 @@ function App() {
                   onSpinStart={handleWheel1SpinStart}
                   onSpinComplete={handleWheel1SpinComplete}
                   riggedCreator={wheel1Rigged}
+                  onClick={handleSpinWheel1}
                 />
-                <div className="flex flex-col gap-2 w-full items-center">
-                  <Button
-                    onClick={handleSpinWheel1}
-                    disabled={!canSpinWheel1}
-                    size="lg"
-                    className="w-full"
-                  >
-                    <Play className="w-4 h-4 mr-2" />
-                    {t('spinWheel1')}
-                  </Button>
-                  {shouldShowRandomizeButtons && (
+                {shouldShowRandomizeButtons && (
+                  <div className="flex flex-col gap-2 w-full items-center">
                     <Button
                       onClick={handleRandomizeWheel1}
                       disabled={wheel1Spinning}
@@ -402,8 +394,8 @@ function App() {
                       <RotateCw className="w-4 h-4 mr-2" />
                       {t('randomizeWheel1')}
                     </Button>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
 
               {/* Wheel 2 */}
@@ -418,18 +410,10 @@ function App() {
                   onSpinStart={handleWheel2SpinStart}
                   onSpinComplete={handleWheel2SpinComplete}
                   riggedCreator={wheel2Rigged}
+                  onClick={handleSpinWheel2}
                 />
-                <div className="flex flex-col gap-2 w-full items-center">
-                  <Button
-                    onClick={handleSpinWheel2}
-                    disabled={!canSpinWheel2}
-                    size="lg"
-                    className="w-full"
-                  >
-                    <Play className="w-4 h-4 mr-2" />
-                    {t('spinWheel2')}
-                  </Button>
-                  {shouldShowRandomizeButtons && (
+                {shouldShowRandomizeButtons && (
+                  <div className="flex flex-col gap-2 w-full items-center">
                     <Button
                       onClick={handleRandomizeWheel2}
                       disabled={wheel2Spinning}
@@ -440,8 +424,8 @@ function App() {
                       <RotateCw className="w-4 h-4 mr-2" />
                       {t('randomizeWheel2')}
                     </Button>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
             </div>
 

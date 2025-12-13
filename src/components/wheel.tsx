@@ -14,6 +14,7 @@ interface WheelProps {
   onSpinStart: () => void
   onSpinComplete: () => void
   riggedCreator?: Creator | null
+  onClick?: () => void
 }
 
 export function Wheel({
@@ -23,6 +24,7 @@ export function Wheel({
   onSpinStart,
   onSpinComplete,
   riggedCreator,
+  onClick,
 }: WheelProps) {
   const [rotation, setRotation] = useState(0)
   const [isAnimating, setIsAnimating] = useState(false)
@@ -44,9 +46,6 @@ export function Wheel({
     setIsAnimating(true)
     onSpinStart()
 
-    // Random speed (3-6 seconds) and random rotations
-    // When rigged, ensure minimum spins for realism (at least 7 full rotations)
-    // When not rigged, use 5-10 full rotations
     const spinDuration = 3000 + Math.random() * 3000 // 3-6 seconds
     setDuration(spinDuration)
     const fullRotations = riggedCreator
@@ -61,7 +60,7 @@ export function Wheel({
     if (riggedCreator) {
       selectedCreator = riggedCreator
       selectedIndex = creators.findIndex((c) => c.id === riggedCreator.id)
-      // If rigged creator not found, fall back to random
+
       if (selectedIndex === -1) {
         selectedIndex = Math.floor(Math.random() * creators.length)
         selectedCreator = creators[selectedIndex]
@@ -71,70 +70,42 @@ export function Wheel({
       selectedCreator = creators[selectedIndex]
     }
 
-    // Calculate angle per segment
     const anglePerSegment = 360 / creators.length
 
-    // Calculate the center angle of the selected segment in wheel coordinates
-    // In the wheel's coordinate system (before any rotation):
-    // - Segment 0 starts at 0° and goes to anglePerSegment°, center at anglePerSegment/2°
-    // - Segment 1 starts at anglePerSegment° and goes to 2*anglePerSegment°, center at 1.5*anglePerSegment°
-    // - etc.
-    // Note: Due to the -90° offset in createPath, segment 0's start appears at the top when rotation=0
     const segmentCenterAngle =
       selectedIndex * anglePerSegment + anglePerSegment / 2
 
-    // The pointer is fixed at the top (0° in screen coordinates)
-    // We want the selected segment's center to align with the pointer
-    // When the wheel rotates clockwise by X degrees, segment center moves X degrees clockwise
-    // To align segment center (at segmentCenterAngle) with pointer (at 0°):
-    // We need: rotation + segmentCenterAngle ≡ 0 (mod 360)
-    // Therefore: rotation ≡ -segmentCenterAngle ≡ 360 - segmentCenterAngle (mod 360)
     const targetAngle = (360 - segmentCenterAngle) % 360
 
-    // Add randomness only if not rigged, otherwise use precise angle
     let finalAngle: number
     if (riggedCreator) {
-      // When rigged, use precise angle with no randomness to ensure it lands correctly
       finalAngle = targetAngle
     } else {
-      // Normal randomness for non-rigged spins
       const randomness = (Math.random() - 0.5) * (anglePerSegment * 0.3)
       finalAngle = targetAngle + randomness
     }
 
-    // Normalize finalAngle to 0-360 range
     finalAngle = ((finalAngle % 360) + 360) % 360
 
-    // Calculate the current normalized rotation (0-360)
     const currentNormalized = ((rotation % 360) + 360) % 360
 
-    // Calculate the minimum rotation needed to reach the target angle
-    // This is the shortest path from current position to target
     let minRotationToTarget = finalAngle - currentNormalized
     if (minRotationToTarget < 0) {
       minRotationToTarget += 360
     }
 
-    // Calculate additional rotation needed
-    // We want: full rotations + adjustment to reach target
-    // additionalRotation = totalRotation + minRotationToTarget
     let additionalRotation = totalRotation + minRotationToTarget
 
-    // Ensure we always rotate forward (positive) - should already be positive, but just in case
     if (additionalRotation < 0) {
-      // Add enough 360s to make it positive
       const fullRotationsNeeded = Math.ceil(Math.abs(additionalRotation) / 360)
       additionalRotation += fullRotationsNeeded * 360
     }
 
-    // For rigged spins, verify the final rotation will be correct
     if (riggedCreator) {
       const newRotation = rotation + additionalRotation
       const finalNormalized = ((newRotation % 360) + 360) % 360
-      // Verify it matches (with small tolerance for floating point)
       const diff = Math.abs(finalNormalized - finalAngle)
       if (diff > 1 && diff < 359) {
-        // Adjust if needed (shouldn't happen, but just in case)
         const correction = finalAngle - finalNormalized
         additionalRotation += correction
       }
@@ -147,11 +118,34 @@ export function Wheel({
       animationRef.current = null
     }
 
+    // Calculate the actual winning creator based on final rotation
+    // Store the final rotation value to use in the timeout callback
+    const finalRotationValue = rotation + additionalRotation
+    const calculateWinningCreator = () => {
+      const finalNormalized = ((finalRotationValue % 360) + 360) % 360
+      // Pointer is at top (0 degrees)
+      // After rotation, we need to find which segment is at the top
+      // The wheel rotates clockwise, so a segment originally at angle theta
+      // is now at angle (theta + finalNormalized) % 360
+      // We need to find which segment's range includes 0 degrees
+      // The segment that was originally at angle (360 - finalNormalized) % 360
+      // is now at the top (0 degrees)
+      const originalAngleAtTop = (360 - finalNormalized) % 360
+      const winningIndex =
+        Math.floor(originalAngleAtTop / anglePerSegment) % creators.length
+      return creators[winningIndex]
+    }
+
     animationRef.current = window.setTimeout(() => {
       isAnimatingRef.current = false
       setIsAnimating(false)
       onSpinComplete()
-      onSpinEnd(selectedCreator)
+      // For rigged mode, use the selected creator (it should land exactly on it)
+      // For random mode, calculate the actual winner based on where it landed
+      const actualWinner = riggedCreator
+        ? selectedCreator
+        : calculateWinningCreator()
+      onSpinEnd(actualWinner)
       animationRef.current = null
     }, spinDuration)
   }
@@ -194,8 +188,15 @@ export function Wheel({
     return `M ${centerX} ${centerY} L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2} Z`
   }
 
+  const canClick = onClick && creators.length > 0 && !isSpinning && !isAnimating
+
   return (
-    <div className="relative w-full aspect-square">
+    <div
+      className={`relative w-full aspect-square ${
+        canClick ? 'cursor-pointer' : ''
+      }`}
+      onClick={canClick ? onClick : undefined}
+    >
       <svg
         width="100%"
         height="100%"
@@ -233,7 +234,7 @@ export function Wheel({
                 textAnchor="middle"
                 dominantBaseline="middle"
                 fill="white"
-                fontSize="12"
+                fontSize="8"
                 fontWeight="600"
                 transform={`rotate(${midAngle + 90}, ${textX}, ${textY})`}
                 className="pointer-events-none"
