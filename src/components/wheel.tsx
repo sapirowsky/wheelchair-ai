@@ -179,7 +179,7 @@ export function Wheel({
   const radius = 160
   const centerX = 160
   const centerY = 160
-  const colors = ['#d946ef', '#a855f7', '#8b5cf6', '#7c3aed', '#6d28d9']
+  const colors = ['#FFF', '#000']
 
   const createPath = (startAngle: number, endAngle: number) => {
     const startRad = ((startAngle - 90) * Math.PI) / 180
@@ -218,7 +218,9 @@ export function Wheel({
           const startAngle = index * anglePerSegment
           const endAngle = (index + 1) * anglePerSegment
           const midAngle = (startAngle + endAngle) / 2
-          const color = colors[index % colors.length]
+          // const color = colors[index % colors.length]
+          const color = index % 3 === 0 ? 'black' : 'white'
+          const textColor = index % 3 === 0 ? 'white' : 'black'
           const textRadius = radius * 0.7
           const textX =
             centerX + textRadius * Math.cos(((midAngle - 90) * Math.PI) / 180)
@@ -230,15 +232,15 @@ export function Wheel({
               <path
                 d={createPath(startAngle, endAngle)}
                 fill={color}
-                stroke="white"
-                strokeWidth="2"
+                stroke="black"
+                strokeWidth=".5"
               />
               <text
                 x={textX}
                 y={textY}
                 textAnchor="middle"
                 dominantBaseline="middle"
-                fill="white"
+                fill={textColor}
                 fontSize="8"
                 fontWeight="600"
                 transform={`rotate(${midAngle + 90}, ${textX}, ${textY})`}
@@ -252,6 +254,11 @@ export function Wheel({
           )
         })}
       </svg>
+      <div className="absolute top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2 size-24 bg-black  rounded-full  z-20 flex items-center justify-center">
+        <span className="text-white text-xs font-bold uppercase">
+          Wheelchair
+        </span>
+      </div>
       {/* Pointer */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-2 z-10">
         <div className="w-0 h-0 border-l-[15px] border-r-[15px] border-t-[30px] border-l-transparent border-r-transparent border-t-foreground"></div>
