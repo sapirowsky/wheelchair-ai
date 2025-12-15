@@ -1,10 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
-import { t } from '@/lib/translations'
 
 export interface Creator {
   id: string
   username: string
   youtubeUrl: string
+}
+
+export interface Impediment {
+  id: string
+  name: string
+  description?: string
 }
 
 interface WheelProps {
@@ -164,7 +169,7 @@ export function Wheel({
     return (
       <div className="flex items-center justify-center w-full aspect-square rounded-full border-4 border-border bg-muted">
         <p className="text-muted-foreground text-center px-4">
-          {t('addCreatorsToSpin')}
+          Dodaj twórców, aby zakręcić
         </p>
       </div>
     )

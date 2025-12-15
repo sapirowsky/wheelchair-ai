@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useCallback, useEffect, useState } from 'react'
 import { ExternalLink, RotateCw, Settings } from 'lucide-react'
-import type { Creator } from '@/components/wheel'
+import type { Creator, Impediment } from '@/components/wheel'
 import { Wheel } from '@/components/wheel'
 import { SpinHistory } from '@/components/spin-history'
 import { SettingsSheet } from '@/components/settings-sheet'
@@ -14,7 +14,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import { t } from '@/lib/translations'
 
 export const Route = createFileRoute('/')({ component: App })
 
@@ -23,10 +22,12 @@ interface SpinHistoryEntry {
   timestamp: Date
   wheel1Creator: Creator | null
   wheel2Creator: Creator | null
+  impediment: Impediment | null
 }
 
 function App() {
   const [creators, setCreators] = useState<Array<Creator>>([])
+  const [impediments, setImpediments] = useState<Array<Impediment>>([])
   const [history, setHistory] = useState<Array<SpinHistoryEntry>>([])
 
   const [wheel1Spinning, setWheel1Spinning] = useState(false)
@@ -37,6 +38,9 @@ function App() {
 
   const [wheel1Result, setWheel1Result] = useState<Creator | null>(null)
   const [wheel2Result, setWheel2Result] = useState<Creator | null>(null)
+  const [currentImpediment, setCurrentImpediment] = useState<Impediment | null>(
+    null,
+  )
   const [showModal, setShowModal] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
   const [wheel1Rigged, setWheel1Rigged] = useState<Creator | null>(null)
@@ -48,6 +52,7 @@ function App() {
   // Load from localStorage
   useEffect(() => {
     const savedCreators = localStorage.getItem('wheel-creators')
+    const savedImpediments = localStorage.getItem('wheel-impediments')
     const savedHistory = localStorage.getItem('wheel-history')
     const savedWheel1Rigged = localStorage.getItem('wheel-1-rigged')
     const savedWheel2Rigged = localStorage.getItem('wheel-2-rigged')
@@ -59,6 +64,15 @@ function App() {
         setCreators(parsed)
       } catch (e) {
         console.error('Failed to load creators', e)
+      }
+    }
+
+    if (savedImpediments) {
+      try {
+        const parsed = JSON.parse(savedImpediments)
+        setImpediments(parsed)
+      } catch (e) {
+        console.error('Failed to load impediments', e)
       }
     }
 
@@ -75,6 +89,7 @@ function App() {
           wheel2Creator: entry.wheel2Creator
             ? { ...entry.wheel2Creator }
             : null,
+          impediment: entry.impediment ? { ...entry.impediment } : null,
         }))
         setHistory(historyWithDates)
       } catch (e) {
@@ -136,34 +151,53 @@ function App() {
 
   // Save to localStorage
   useEffect(() => {
-    localStorage.setItem('wheel-creators', JSON.stringify(creators))
+    if (typeof window !== 'undefined' && creators.length > 0) {
+      localStorage.setItem('wheel-creators', JSON.stringify(creators))
+    }
   }, [creators])
 
   useEffect(() => {
-    localStorage.setItem('wheel-history', JSON.stringify(history))
+    if (typeof window !== 'undefined' && impediments.length > 0) {
+      localStorage.setItem('wheel-impediments', JSON.stringify(impediments))
+    }
+  }, [impediments])
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && history.length > 0) {
+      localStorage.setItem('wheel-history', JSON.stringify(history))
+    }
   }, [history])
 
   useEffect(() => {
-    if (wheel1Rigged) {
-      localStorage.setItem('wheel-1-rigged', JSON.stringify(wheel1Rigged))
-    } else {
-      localStorage.removeItem('wheel-1-rigged')
+    if (typeof window !== 'undefined') {
+      if (wheel1Rigged) {
+        localStorage.setItem('wheel-1-rigged', JSON.stringify(wheel1Rigged))
+      } else {
+        localStorage.removeItem('wheel-1-rigged')
+      }
     }
   }, [wheel1Rigged])
 
   useEffect(() => {
-    if (wheel2Rigged) {
-      localStorage.setItem('wheel-2-rigged', JSON.stringify(wheel2Rigged))
-    } else {
-      localStorage.removeItem('wheel-2-rigged')
+    if (typeof window !== 'undefined') {
+      if (wheel2Rigged) {
+        localStorage.setItem('wheel-2-rigged', JSON.stringify(wheel2Rigged))
+      } else {
+        localStorage.removeItem('wheel-2-rigged')
+      }
     }
   }, [wheel2Rigged])
 
   useEffect(() => {
-    if (maxCreatorsToShow > 0) {
-      localStorage.setItem('max-creators-to-show', maxCreatorsToShow.toString())
-    } else {
-      localStorage.removeItem('max-creators-to-show')
+    if (typeof window !== 'undefined') {
+      if (maxCreatorsToShow > 0) {
+        localStorage.setItem(
+          'max-creators-to-show',
+          maxCreatorsToShow.toString(),
+        )
+      } else {
+        localStorage.removeItem('max-creators-to-show')
+      }
     }
   }, [maxCreatorsToShow])
 
@@ -230,6 +264,7 @@ function App() {
     setBothWheelsSpinning(false)
     setWheel1Complete(false)
     setWheel1Result(null)
+    setCurrentImpediment(null)
   }
 
   const handleSpinWheel2 = () => {
@@ -240,6 +275,7 @@ function App() {
     setBothWheelsSpinning(false)
     setWheel2Complete(false)
     setWheel2Result(null)
+    setCurrentImpediment(null)
   }
 
   const handleRandomizeWheel1 = () => {
@@ -270,15 +306,28 @@ function App() {
     setWheel2Complete(false)
     setWheel1Result(null)
     setWheel2Result(null)
+    setCurrentImpediment(null)
+  }
+
+  // Roll for impediment once when first wheel completes (only if not already rolled)
+  const rollForImpediment = () => {
+    if (currentImpediment !== null) return // Already rolled
+    if (impediments.length > 0 && Math.random() < 0.25) {
+      const randomImpediment =
+        impediments[Math.floor(Math.random() * impediments.length)]
+      setCurrentImpediment(randomImpediment)
+    }
   }
 
   const handleWheel1SpinEnd = (creator: Creator) => {
     setWheel1Result(creator)
+    rollForImpediment()
     setWheel1Complete(true)
   }
 
   const handleWheel2SpinEnd = (creator: Creator) => {
     setWheel2Result(creator)
+    rollForImpediment()
     setWheel2Complete(true)
   }
 
@@ -329,6 +378,7 @@ function App() {
         timestamp: new Date(),
         wheel1Creator: wheel1Result,
         wheel2Creator: wheel2Result,
+        impediment: currentImpediment,
       }
       setHistory([...history, newEntry])
     }
@@ -336,6 +386,7 @@ function App() {
     // Reset results
     setWheel1Result(null)
     setWheel2Result(null)
+    setCurrentImpediment(null)
     setWheel1Complete(false)
     setWheel2Complete(false)
     setBothWheelsSpinning(false)
@@ -351,16 +402,16 @@ function App() {
         <div className="text-center mb-8">
           <div className="flex items-center justify-between mb-2">
             <div className="flex-1"></div>
-            <h1 className="text-4xl font-bold flex-1">{t('wheelOfFortune')}</h1>
+            <h1 className="text-4xl font-bold flex-1">Wheelchair</h1>
             <div className="flex-1 flex justify-end">
               <Button variant="outline" onClick={() => setShowSettings(true)}>
                 <Settings className="w-4 h-4 mr-2" />
-                {t('settings')}
+                Ustawienia
               </Button>
             </div>
           </div>
           <p className="text-muted-foreground">
-            {t('spinToSelectCreators')}
+            Zakręć, aby losowo wybrać twórców
           </p>
         </div>
 
@@ -370,7 +421,7 @@ function App() {
             <div className="flex flex-col md:flex-row items-center justify-center gap-8 md:gap-12">
               {/* Wheel 1 */}
               <div className="flex flex-col items-center gap-4 w-full">
-                <h2 className="text-xl font-semibold">{t('wheel1')}</h2>
+                <h2 className="text-xl font-semibold">Koło 1</h2>
                 <Wheel
                   creators={
                     wheel1Creators.length > 0 ? wheel1Creators : creators
@@ -392,7 +443,7 @@ function App() {
                       className="w-full"
                     >
                       <RotateCw className="w-4 h-4 mr-2" />
-                      {t('randomizeWheel1')}
+                      Losuj Koło 1
                     </Button>
                   </div>
                 )}
@@ -400,7 +451,7 @@ function App() {
 
               {/* Wheel 2 */}
               <div className="flex flex-col items-center gap-4 w-full">
-                <h2 className="text-xl font-semibold">{t('wheel2')}</h2>
+                <h2 className="text-xl font-semibold">Koło 2</h2>
                 <Wheel
                   creators={
                     wheel2Creators.length > 0 ? wheel2Creators : creators
@@ -422,7 +473,7 @@ function App() {
                       className="w-full"
                     >
                       <RotateCw className="w-4 h-4 mr-2" />
-                      {t('randomizeWheel2')}
+                      Losuj Koło 2
                     </Button>
                   </div>
                 )}
@@ -438,7 +489,7 @@ function App() {
                 variant="secondary"
               >
                 <RotateCw className="w-4 h-4 mr-2" />
-                {t('spinBothWheels')}
+                Zakręć Oba Koła
               </Button>
             </div>
 
@@ -450,69 +501,82 @@ function App() {
 
       {/* Result Modal */}
       <AlertDialog open={showModal} onOpenChange={setShowModal}>
-        <AlertDialogContent>
+        <AlertDialogContent className="!min-w-fit !w-fit data-[size=default]:!max-w-[50vw] data-[size=default]:sm:!max-w-[50vw]">
           <AlertDialogHeader>
-            <AlertDialogTitle>{t('selectedCreator')}</AlertDialogTitle>
-            <AlertDialogDescription>
-              <div className="space-y-4 mt-4">
-                {wheel1Result && (
-                  <div className="space-y-2">
-                    <p className="text-sm font-medium text-muted-foreground">
-                      {t('wheel1Label')}
-                    </p>
-                    <div className="flex items-center gap-2">
-                      <p className="text-lg font-semibold">
-                        {wheel1Result.username}
-                      </p>
-                      <a
-                        href={wheel1Result.youtubeUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        title={t('openYouTube')}
-                      >
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="h-8 w-8"
+            <AlertDialogTitle className="flex justify-end w-full">
+              <Button onClick={handleModalClose}>X</Button>
+            </AlertDialogTitle>
+            <AlertDialogDescription className="w-full px-20 pb-6">
+              <div className="space-y-4 mt-4 w-full flex flex-col gap-4 text-nowrap">
+                <div className="flex gap-4 w-full">
+                  {wheel1Result && (
+                    <div className="space-y-2 flex-1 flex justify-center">
+                      <div className="flex items-center gap-2 hover:text-accent">
+                        <a
+                          href={wheel1Result.youtubeUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          title="Otwórz YouTube"
+                          className="flex hover:text-muted-foreground/50"
                         >
-                          <ExternalLink className="w-4 h-4" />
-                        </Button>
-                      </a>
+                          <p className="text-3xl font-semibold">
+                            {wheel1Result.username}
+                          </p>
+                          <span className="relative">
+                            <ExternalLink className="size-3" />
+                          </span>
+                        </a>
+                      </div>
                     </div>
-                  </div>
-                )}
-                {wheel2Result && (
-                  <div className="space-y-2">
-                    <p className="text-sm font-medium text-muted-foreground">
-                      {t('wheel2Label')}
-                    </p>
-                    <div className="flex items-center gap-2">
-                      <p className="text-lg font-semibold">
-                        {wheel2Result.username}
+                  )}
+                  {wheel1Result && wheel2Result && (
+                    <div className="flex items-center justify-center">
+                      <p className="text-3xl font-medium text-muted-foreground">
+                        +
                       </p>
-                      <a
-                        href={wheel2Result.youtubeUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        title={t('openYouTube')}
-                      >
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="h-8 w-8"
+                    </div>
+                  )}
+                  {wheel2Result && (
+                    <div className="space-y-2 flex-1 flex justify-center">
+                      <div className="flex items-center gap-2 hover:text-muted-foreground/50">
+                        <a
+                          href={wheel2Result.youtubeUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          title="Otwórz YouTube"
+                          className="flex"
                         >
-                          <ExternalLink className="w-4 h-4" />
-                        </Button>
-                      </a>
+                          <p className="text-3xl font-semibold">
+                            {wheel2Result.username}
+                          </p>
+                          <span className="relative">
+                            <ExternalLink className="size-3" />
+                          </span>
+                        </a>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                {currentImpediment && (
+                  <div className="w-full flex justify-center">
+                    <div className="w-fit flex flex-col gap-1 items-center p-4 rounded-lg border-2 bg-linear-to-br from-slate-200 via-slate-300 to-slate-400 dark:from-slate-700 dark:via-slate-600 dark:to-slate-500 border-slate-400 dark:border-slate-300 shadow-lg animate-pulse">
+                      <p className="text-lg font-medium text-slate-800 dark:text-slate-200 mb-1">
+                        Przeszkoda:
+                      </p>
+                      <p className="text-xl font-bold text-slate-900 dark:text-slate-100">
+                        {currentImpediment.name}
+                      </p>
+                      {currentImpediment.description && (
+                        <p className="text-sm text-slate-700 dark:text-slate-300 mt-1">
+                          {currentImpediment.description}
+                        </p>
+                      )}
                     </div>
                   </div>
                 )}
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <Button onClick={handleModalClose}>{t('close')}</Button>
-          </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
@@ -522,6 +586,8 @@ function App() {
         onOpenChange={setShowSettings}
         creators={creators}
         onCreatorsChange={setCreators}
+        impediments={impediments}
+        onImpedimentsChange={setImpediments}
         wheel1Rigged={wheel1Rigged}
         wheel2Rigged={wheel2Rigged}
         onWheel1RiggedChange={setWheel1Rigged}

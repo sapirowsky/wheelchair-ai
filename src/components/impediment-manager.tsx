@@ -1,64 +1,63 @@
 import { useState } from "react";
 import { Plus, Trash2, Upload } from "lucide-react";
-import type { Creator } from "./wheel";
+import type { Impediment } from "./wheel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-interface CreatorManagerProps {
-  creators: Array<Creator>;
-  onCreatorsChange: (creators: Array<Creator>) => void;
+interface ImpedimentManagerProps {
+  impediments: Array<Impediment>;
+  onImpedimentsChange: (impediments: Array<Impediment>) => void;
 }
 
-export function CreatorManager({ creators, onCreatorsChange }: CreatorManagerProps) {
-  const [username, setUsername] = useState("");
-  const [youtubeUrl, setYoutubeUrl] = useState("");
-  const [bulkUsernames, setBulkUsernames] = useState("");
+export function ImpedimentManager({ impediments, onImpedimentsChange }: ImpedimentManagerProps) {
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [bulkNames, setBulkNames] = useState("");
 
   const handleAdd = () => {
-    if (!username.trim()) return;
+    if (!name.trim()) return;
 
-    const newCreator: Creator = {
+    const newImpediment: Impediment = {
       id: Date.now().toString(),
-      username: username.trim(),
-      youtubeUrl: youtubeUrl.trim() || `https://www.youtube.com/results?search_query=${encodeURIComponent(username.trim())}`,
+      name: name.trim(),
+      description: description.trim() || undefined,
     };
 
-    onCreatorsChange([...creators, newCreator]);
-    setUsername("");
-    setYoutubeUrl("");
+    onImpedimentsChange([...impediments, newImpediment]);
+    setName("");
+    setDescription("");
   };
 
   const handleBulkAdd = () => {
-    if (!bulkUsernames.trim()) return;
+    if (!bulkNames.trim()) return;
 
-    const lines = bulkUsernames
+    const lines = bulkNames
       .split("\n")
       .map((line) => line.trim())
       .filter((line) => line.length > 0);
 
     if (lines.length === 0) return;
 
-    const newCreators: Creator[] = lines.map((username) => ({
+    const newImpediments: Impediment[] = lines.map((name) => ({
       id: `${Date.now()}-${Math.random()}`,
-      username: username,
-      youtubeUrl: `https://www.youtube.com/results?search_query=${encodeURIComponent(username)}`,
+      name: name,
     }));
 
-    onCreatorsChange([...creators, ...newCreators]);
-    setBulkUsernames("");
+    onImpedimentsChange([...impediments, ...newImpediments]);
+    setBulkNames("");
   };
 
   const handleDelete = (id: string) => {
-    onCreatorsChange(creators.filter((c) => c.id !== id));
+    onImpedimentsChange(impediments.filter((i) => i.id !== id));
   };
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Zarządzaj Twórcami</CardTitle>
+        <CardTitle>Zarządzaj Przeszkodami</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <Tabs defaultValue="single" className="w-full">
@@ -67,77 +66,75 @@ export function CreatorManager({ creators, onCreatorsChange }: CreatorManagerPro
             <TabsTrigger value="bulk">Import Masowy</TabsTrigger>
           </TabsList>
           <TabsContent value="single" className="space-y-2">
-            <div className="flex gap-2">
+            <div className="space-y-2">
               <Input
-                placeholder="Nazwa użytkownika"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                placeholder="Nazwa przeszkody"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleAdd()}
               />
               <Input
-                placeholder="URL YouTube (opcjonalne)"
-                value={youtubeUrl}
-                onChange={(e) => setYoutubeUrl(e.target.value)}
+                placeholder="Opis (opcjonalne)"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleAdd()}
               />
-              <Button onClick={handleAdd} disabled={!username.trim()}>
-                <Plus className="w-4 h-4" />
+              <Button onClick={handleAdd} disabled={!name.trim()}>
+                <Plus className="w-4 h-4 mr-2" />
+                Dodaj
               </Button>
             </div>
           </TabsContent>
           <TabsContent value="bulk" className="space-y-2">
             <div className="space-y-2">
               <Textarea
-                placeholder="Wpisz nazwy użytkowników, po jednej w linii\nPrzykład:\ntwórca1\ntwórca2\ntwórca3"
-                value={bulkUsernames}
-                onChange={(e) => setBulkUsernames(e.target.value)}
+                placeholder="Wpisz nazwy przeszkód, po jednej w linii\nPrzykład:\nprzeszkoda1\nprzeszkoda2\nprzeszkoda3"
+                value={bulkNames}
+                onChange={(e) => setBulkNames(e.target.value)}
                 rows={6}
               />
               <Button
                 onClick={handleBulkAdd}
-                disabled={!bulkUsernames.trim()}
+                disabled={!bulkNames.trim()}
                 className="w-full"
               >
                 <Upload className="w-4 h-4 mr-2" />
                 Dodaj Wszystkich
               </Button>
               <p className="text-xs text-muted-foreground">
-                Wklej wiele nazw użytkowników, po jednej w linii. Adresy URL YouTube zostaną wygenerowane automatycznie.
+                Wklej wiele nazw przeszkód, po jednej w linii.
               </p>
             </div>
           </TabsContent>
         </Tabs>
 
         <div className="space-y-2 max-h-60 overflow-y-auto">
-          {creators.length === 0 ? (
+          {impediments.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-4">
-              Nie dodano jeszcze żadnych twórców
+              Nie dodano jeszcze żadnych przeszkód
             </p>
           ) : (
             <>
               <p className="text-sm text-muted-foreground">
-                Łącznie twórców: {creators.length}
+                Łącznie przeszkód: {impediments.length}
               </p>
-              {creators.map((creator) => (
+              {impediments.map((impediment) => (
                 <div
-                  key={creator.id}
+                  key={impediment.id}
                   className="flex items-center justify-between p-2 rounded-lg bg-muted/50"
                 >
                   <div className="flex-1">
-                    <p className="font-medium">{creator.username}</p>
-                    <a
-                      href={creator.youtubeUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs text-primary hover:underline"
-                    >
-                      {creator.youtubeUrl}
-                    </a>
+                    <p className="font-medium">{impediment.name}</p>
+                    {impediment.description && (
+                      <p className="text-xs text-muted-foreground">
+                        {impediment.description}
+                      </p>
+                    )}
                   </div>
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => handleDelete(creator.id)}
+                    onClick={() => handleDelete(impediment.id)}
                   >
                     <Trash2 className="w-4 h-4" />
                   </Button>

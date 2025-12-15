@@ -1,5 +1,6 @@
 import { CreatorManager } from './creator-manager'
-import type { Creator } from './wheel'
+import { ImpedimentManager } from './impediment-manager'
+import type { Creator, Impediment } from './wheel'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
@@ -17,13 +18,14 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet'
-import { t } from '@/lib/translations'
 
 interface SettingsSheetProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   creators: Array<Creator>
   onCreatorsChange: (creators: Array<Creator>) => void
+  impediments: Array<Impediment>
+  onImpedimentsChange: (impediments: Array<Impediment>) => void
   wheel1Rigged: Creator | null
   wheel2Rigged: Creator | null
   onWheel1RiggedChange: (creator: Creator | null) => void
@@ -37,6 +39,8 @@ export function SettingsSheet({
   onOpenChange,
   creators,
   onCreatorsChange,
+  impediments,
+  onImpedimentsChange,
   wheel1Rigged,
   wheel2Rigged,
   onWheel1RiggedChange,
@@ -45,27 +49,27 @@ export function SettingsSheet({
   onMaxCreatorsToShowChange,
 }: SettingsSheetProps) {
   // Create items array - use usernames as values for display, but map to IDs
-  const wheel1Items = [t('randomNoRig'), ...creators.map((c) => c.username)]
+  const wheel1Items = ['Losowo (bez ustawienia)', ...creators.map((c) => c.username)]
 
-  const wheel2Items = [t('randomNoRig'), ...creators.map((c) => c.username)]
+  const wheel2Items = ['Losowo (bez ustawienia)', ...creators.map((c) => c.username)]
 
-  const wheel1Value = wheel1Rigged?.username || t('randomNoRig')
-  const wheel2Value = wheel2Rigged?.username || t('randomNoRig')
+  const wheel1Value = wheel1Rigged?.username || 'Losowo (bez ustawienia)'
+  const wheel2Value = wheel2Rigged?.username || 'Losowo (bez ustawienia)'
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="flex flex-col">
         <SheetHeader>
-          <SheetTitle>{t('settings')}</SheetTitle>
+          <SheetTitle>Ustawienia</SheetTitle>
         </SheetHeader>
         <div className="mt-6 space-y-6 overflow-y-auto flex-1 min-h-0">
           <Card>
             <CardHeader>
-              <CardTitle>{t('wheelSettings')}</CardTitle>
+              <CardTitle>Ustawienia Kół</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="max-creators">{t('maxCreatorsToShow')}</Label>
+                <Label htmlFor="max-creators">Maksymalna Liczba Twórców na Kole</Label>
                 <Input
                   id="max-creators"
                   type="number"
@@ -79,10 +83,10 @@ export function SettingsSheet({
                       onMaxCreatorsToShowChange(0)
                     }
                   }}
-                  placeholder={t('allCreators')}
+                  placeholder="Wszyscy twórcy"
                 />
                 <p className="text-xs text-muted-foreground">
-                  {t('maxCreatorsDescription')}
+                  Podczas kręcenia losowo wybierz tylu twórców z listy. Pozostaw puste lub ustaw 0, aby pokazać wszystkich twórców. Jeśli masz mniej twórców niż ta liczba, wszyscy będą pokazani.
                 </p>
               </div>
             </CardContent>
@@ -93,18 +97,23 @@ export function SettingsSheet({
             onCreatorsChange={onCreatorsChange}
           />
 
+          <ImpedimentManager
+            impediments={impediments}
+            onImpedimentsChange={onImpedimentsChange}
+          />
+
           <Card>
             <CardHeader>
-              <CardTitle>{t('rigWheels')}</CardTitle>
+              <CardTitle>Ustawienie Wyników</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="wheel1-rig">{t('wheel1Preselected')}</Label>
+                <Label htmlFor="wheel1-rig">Koło 1 (z góry wybrany wynik)</Label>
                 <Combobox
                   items={wheel1Items}
                   value={wheel1Value}
                   onValueChange={(value) => {
-                    if (value === t('randomNoRig') || !value) {
+                    if (value === 'Losowo (bez ustawienia)' || !value) {
                       onWheel1RiggedChange(null)
                     } else {
                       const creator = creators.find((c) => c.username === value)
@@ -116,12 +125,12 @@ export function SettingsSheet({
                 >
                   <ComboboxInput
                     id="wheel1-rig"
-                    placeholder={t('selectCreatorOrSearch')}
+                    placeholder="Wybierz twórcę lub wpisz, aby wyszukać..."
                     className="w-full"
                     showClear
                   />
                   <ComboboxContent>
-                    <ComboboxEmpty>{t('noCreatorsFound')}</ComboboxEmpty>
+                    <ComboboxEmpty>Nie znaleziono twórców.</ComboboxEmpty>
                     <ComboboxList>
                       {(item) => (
                         <ComboboxItem key={item} value={item}>
@@ -134,12 +143,12 @@ export function SettingsSheet({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="wheel2-rig">{t('wheel2Preselected')}</Label>
+                <Label htmlFor="wheel2-rig">Koło 2 (z góry wybrany wynik)</Label>
                 <Combobox
                   items={wheel2Items}
                   value={wheel2Value}
                   onValueChange={(value) => {
-                    if (value === t('randomNoRig') || !value) {
+                    if (value === 'Losowo (bez ustawienia)' || !value) {
                       onWheel2RiggedChange(null)
                     } else {
                       const creator = creators.find((c) => c.username === value)
@@ -151,12 +160,12 @@ export function SettingsSheet({
                 >
                   <ComboboxInput
                     id="wheel2-rig"
-                    placeholder={t('selectCreatorOrSearch')}
+                    placeholder="Wybierz twórcę lub wpisz, aby wyszukać..."
                     className="w-full"
                     showClear
                   />
                   <ComboboxContent>
-                    <ComboboxEmpty>{t('noCreatorsFound')}</ComboboxEmpty>
+                    <ComboboxEmpty>Nie znaleziono twórców.</ComboboxEmpty>
                     <ComboboxList>
                       {(item) => (
                         <ComboboxItem key={item} value={item}>
@@ -169,7 +178,7 @@ export function SettingsSheet({
               </div>
 
               <p className="text-xs text-muted-foreground">
-                {t('rigDescription')}
+                Gdy ustawione, koła będą kręcić się normalnie, ale zawsze zatrzymają się na wybranym twórcy.
               </p>
             </CardContent>
           </Card>

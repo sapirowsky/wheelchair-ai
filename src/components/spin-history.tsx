@@ -1,14 +1,14 @@
 import { useState } from 'react'
-import type { Creator } from './wheel'
+import type { Creator, Impediment } from './wheel'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { t } from '@/lib/translations'
 
 interface SpinHistoryEntry {
   id: string
   timestamp: Date
   wheel1Creator: Creator | null
   wheel2Creator: Creator | null
+  impediment: Impediment | null
 }
 
 interface SpinHistoryProps {
@@ -29,14 +29,14 @@ export function SpinHistory({ history }: SpinHistoryProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{t('spinHistory')}</CardTitle>
+        <CardTitle>Historia Kręceń</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
           <div className="space-y-2 overflow-y-auto">
             {history.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-4">
-                {t('noSpinsYet')}
+                Brak kręceń
               </p>
             ) : (
               displayedHistory.map((entry) => (
@@ -47,10 +47,12 @@ export function SpinHistory({ history }: SpinHistoryProps) {
                   <p className="text-xs text-muted-foreground mb-2">
                     {new Date(entry.timestamp).toLocaleString('pl-PL')}
                   </p>
-                  <div className="space-y-1">
+                  <div className="space-y-2">
                     {entry.wheel1Creator && (
                       <div>
-                        <span className="text-xs font-medium">{t('wheel1History')}</span>
+                        <span className="text-xs font-medium">
+                          Koło 1: 
+                        </span>
                         <a
                           href={entry.wheel1Creator.youtubeUrl}
                           target="_blank"
@@ -63,7 +65,9 @@ export function SpinHistory({ history }: SpinHistoryProps) {
                     )}
                     {entry.wheel2Creator && (
                       <div>
-                        <span className="text-xs font-medium">{t('wheel2History')}</span>
+                        <span className="text-xs font-medium">
+                          Koło 2: 
+                        </span>
                         <a
                           href={entry.wheel2Creator.youtubeUrl}
                           target="_blank"
@@ -72,6 +76,14 @@ export function SpinHistory({ history }: SpinHistoryProps) {
                         >
                           {entry.wheel2Creator.username}
                         </a>
+                      </div>
+                    )}
+                    {entry.impediment && (
+                      <div className="text-xs mt-1">
+                        <span className="font-medium">Przeszkoda: </span>
+                        <span className="font-bold text-slate-600 dark:text-slate-400">
+                          {entry.impediment.name}
+                        </span>
                       </div>
                     )}
                   </div>
@@ -87,8 +99,8 @@ export function SpinHistory({ history }: SpinHistoryProps) {
               className="w-full"
             >
               {showAll
-                ? t('showLess')
-                : `${t('showMore')} (${history.length - MAX_DISPLAYED} ${t('more')})`}
+                ? 'Pokaż Mniej'
+                : `Pokaż Więcej (${history.length - MAX_DISPLAYED} więcej)`}
             </Button>
           )}
         </div>
