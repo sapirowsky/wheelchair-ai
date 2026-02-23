@@ -179,7 +179,6 @@ export function Wheel({
   const radius = 160
   const centerX = 160
   const centerY = 160
-  const colors = ['#FFF', '#000']
 
   const createPath = (startAngle: number, endAngle: number) => {
     const startRad = ((startAngle - 90) * Math.PI) / 180
