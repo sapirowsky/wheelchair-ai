@@ -12,7 +12,10 @@ interface ImpedimentManagerProps {
   onImpedimentsChange: (impediments: Array<Impediment>) => void;
 }
 
-export function ImpedimentManager({ impediments, onImpedimentsChange }: ImpedimentManagerProps) {
+export function ImpedimentManager({
+  impediments,
+  onImpedimentsChange,
+}: ImpedimentManagerProps) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [bulkNames, setBulkNames] = useState("");
@@ -43,7 +46,7 @@ export function ImpedimentManager({ impediments, onImpedimentsChange }: Impedime
 
     const newImpediments: Impediment[] = lines.map((name) => ({
       id: `${Date.now()}-${Math.random()}`,
-      name: name,
+      name,
     }));
 
     onImpedimentsChange([...impediments, ...newImpediments]);
@@ -54,16 +57,20 @@ export function ImpedimentManager({ impediments, onImpedimentsChange }: Impedime
     onImpedimentsChange(impediments.filter((i) => i.id !== id));
   };
 
+  const handleDeleteAll = () => {
+    onImpedimentsChange([]);
+  };
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Zarządzaj Przeszkodami</CardTitle>
+        <CardTitle>Zarządzaj przeszkodami</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <Tabs defaultValue="single" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="single">Dodaj Pojedynczo</TabsTrigger>
-            <TabsTrigger value="bulk">Import Masowy</TabsTrigger>
+            <TabsTrigger value="single">Dodaj pojedynczo</TabsTrigger>
+            <TabsTrigger value="bulk">Import masowy</TabsTrigger>
           </TabsList>
           <TabsContent value="single" className="space-y-2">
             <div className="space-y-2">
@@ -99,7 +106,7 @@ export function ImpedimentManager({ impediments, onImpedimentsChange }: Impedime
                 className="w-full"
               >
                 <Upload className="w-4 h-4 mr-2" />
-                Dodaj Wszystkich
+                Dodaj wszystkich
               </Button>
               <p className="text-xs text-muted-foreground">
                 Wklej wiele nazw przeszkód, po jednej w linii.
@@ -115,9 +122,19 @@ export function ImpedimentManager({ impediments, onImpedimentsChange }: Impedime
             </p>
           ) : (
             <>
-              <p className="text-sm text-muted-foreground">
-                Łącznie przeszkód: {impediments.length}
-              </p>
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-sm text-muted-foreground">
+                  Łącznie przeszkód: {impediments.length}
+                </p>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={handleDeleteAll}
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Usuń wszystkie
+                </Button>
+              </div>
               {impediments.map((impediment) => (
                 <div
                   key={impediment.id}
@@ -147,4 +164,3 @@ export function ImpedimentManager({ impediments, onImpedimentsChange }: Impedime
     </Card>
   );
 }
-

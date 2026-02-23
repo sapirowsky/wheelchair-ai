@@ -68,6 +68,10 @@ export function CreatorManager({
     onCreatorsChange(creators.filter((c) => c.id !== id));
   };
 
+  const handleDeleteAll = () => {
+    onCreatorsChange([]);
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -126,9 +130,19 @@ export function CreatorManager({
             </p>
           ) : (
             <>
-              <p className="text-sm text-muted-foreground">
-                Łącznie twórców: {creators.length}
-              </p>
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-sm text-muted-foreground">
+                  Łącznie twórców: {creators.length}
+                </p>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={handleDeleteAll}
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Usuń wszystkich
+                </Button>
+              </div>
               {creators.map((creator) => (
                 <div
                   key={creator.id}
