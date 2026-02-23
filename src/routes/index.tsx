@@ -547,7 +547,7 @@ function App() {
 
       {/* Result Modal */}
       <AlertDialog open={showModal} onOpenChange={setShowModal}>
-        <AlertDialogContent className="!min-w-fit !w-fit data-[size=default]:!max-w-[50vw] data-[size=default]:sm:!max-w-[50vw]">
+        <AlertDialogContent className="min-w-fit! w-fit! data-[size=default]:max-w-[50vw]! data-[size=default]:sm:max-w-[50vw]!">
           <AlertDialogHeader>
             <AlertDialogTitle className="flex justify-end w-full">
               <Button onClick={handleModalClose}>X</Button>

@@ -260,7 +260,7 @@ export function Wheel({
       </div>
       {/* Pointer */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-2 z-10">
-        <div className="w-0 h-0 border-l-[15px] border-r-[15px] border-t-[30px] border-l-transparent border-r-transparent border-t-foreground"></div>
+        <div className="w-0 h-0 border-l-15 border-r-15 border-t-30 border-l-transparent border-r-transparent border-t-foreground"></div>
       </div>
     </div>
   )
