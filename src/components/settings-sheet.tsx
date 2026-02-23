@@ -24,6 +24,8 @@ interface SettingsSheetProps {
   onOpenChange: (open: boolean) => void
   creators: Array<Creator>
   onCreatorsChange: (creators: Array<Creator>) => void
+  secondaryCreators: Array<Creator>
+  onSecondaryCreatorsChange: (creators: Array<Creator>) => void
   impediments: Array<Impediment>
   onImpedimentsChange: (impediments: Array<Impediment>) => void
   wheel1Rigged: Creator | null
@@ -39,6 +41,8 @@ export function SettingsSheet({
   onOpenChange,
   creators,
   onCreatorsChange,
+  secondaryCreators,
+  onSecondaryCreatorsChange,
   impediments,
   onImpedimentsChange,
   wheel1Rigged,
@@ -48,10 +52,17 @@ export function SettingsSheet({
   maxCreatorsToShow,
   onMaxCreatorsToShowChange,
 }: SettingsSheetProps) {
-  // Create items array - use usernames as values for display, but map to IDs
-  const wheel1Items = ['Losowo (bez ustawienia)', ...creators.map((c) => c.username)]
+  const isSecondaryActive = secondaryCreators.length > 0
+  const wheel2SourceCreators = isSecondaryActive ? secondaryCreators : creators
 
-  const wheel2Items = ['Losowo (bez ustawienia)', ...creators.map((c) => c.username)]
+  const wheel1Items = [
+    'Losowo (bez ustawienia)',
+    ...creators.map((c) => c.username),
+  ]
+  const wheel2Items = [
+    'Losowo (bez ustawienia)',
+    ...wheel2SourceCreators.map((c) => c.username),
+  ]
 
   const wheel1Value = wheel1Rigged?.username || 'Losowo (bez ustawienia)'
   const wheel2Value = wheel2Rigged?.username || 'Losowo (bez ustawienia)'
@@ -69,7 +80,7 @@ export function SettingsSheet({
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="max-creators">Maksymalna Liczba Twórców na Kole</Label>
+                <Label htmlFor="max-creators">Maksymalna liczba twórców na kole</Label>
                 <Input
                   id="max-creators"
                   type="number"
@@ -86,7 +97,9 @@ export function SettingsSheet({
                   placeholder="Wszyscy twórcy"
                 />
                 <p className="text-xs text-muted-foreground">
-                  Podczas kręcenia losowo wybierz tylu twórców z listy. Pozostaw puste lub ustaw 0, aby pokazać wszystkich twórców. Jeśli masz mniej twórców niż ta liczba, wszyscy będą pokazani.
+                  Podczas kręcenia losowo wybierz tylu twórców z listy. Pozostaw
+                  puste lub ustaw 0, aby pokazać wszystkich twórców. Jeśli masz
+                  mniej twórców niż ta liczba, wszyscy będą pokazani.
                 </p>
               </div>
             </CardContent>
@@ -95,6 +108,25 @@ export function SettingsSheet({
           <CreatorManager
             creators={creators}
             onCreatorsChange={onCreatorsChange}
+            title="Lista twórców 1 (główna)"
+            emptyMessage="Lista główna jest pusta"
+          />
+
+          <Card>
+            <CardContent className="pt-6">
+              <p className="text-xs text-muted-foreground">
+                Lista twórców 2 jest opcjonalna. Gdy jest pusta, koło 2 używa
+                listy twórców 1 (oryginalne zachowanie).
+              </p>
+            </CardContent>
+          </Card>
+
+          <CreatorManager
+            creators={secondaryCreators}
+            onCreatorsChange={onSecondaryCreatorsChange}
+            title="Lista twórców 2 (opcjonalna)"
+            emptyMessage="Lista opcjonalna jest pusta"
+            bulkHint="Wklej wiele nazw użytkowników dla koła 2, po jednej w linii."
           />
 
           <ImpedimentManager
@@ -104,7 +136,7 @@ export function SettingsSheet({
 
           <Card>
             <CardHeader>
-              <CardTitle>Ustawienie Wyników</CardTitle>
+              <CardTitle>Ustawienie wyników</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
@@ -151,7 +183,9 @@ export function SettingsSheet({
                     if (value === 'Losowo (bez ustawienia)' || !value) {
                       onWheel2RiggedChange(null)
                     } else {
-                      const creator = creators.find((c) => c.username === value)
+                      const creator = wheel2SourceCreators.find(
+                        (c) => c.username === value,
+                      )
                       if (creator) {
                         onWheel2RiggedChange(creator)
                       }
@@ -178,7 +212,8 @@ export function SettingsSheet({
               </div>
 
               <p className="text-xs text-muted-foreground">
-                Gdy ustawione, koła będą kręcić się normalnie, ale zawsze zatrzymają się na wybranym twórcy.
+                Gdy ustawione, koła będą kręcić się normalnie, ale zawsze
+                zatrzymają się na wybranym twórcy.
               </p>
             </CardContent>
           </Card>

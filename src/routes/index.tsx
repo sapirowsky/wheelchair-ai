@@ -10,7 +10,6 @@ import {
   AlertDialog,
   AlertDialogContent,
   AlertDialogDescription,
-  AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
@@ -27,6 +26,7 @@ interface SpinHistoryEntry {
 
 function App() {
   const [creators, setCreators] = useState<Array<Creator>>([])
+  const [secondaryCreators, setSecondaryCreators] = useState<Array<Creator>>([])
   const [impediments, setImpediments] = useState<Array<Impediment>>([])
   const [history, setHistory] = useState<Array<SpinHistoryEntry>>([])
 
@@ -48,10 +48,14 @@ function App() {
   const [maxCreatorsToShow, setMaxCreatorsToShow] = useState<number>(0)
   const [wheel1Creators, setWheel1Creators] = useState<Array<Creator>>([])
   const [wheel2Creators, setWheel2Creators] = useState<Array<Creator>>([])
+  const isSecondaryActive = secondaryCreators.length > 0
+  const wheel1SourceCreators = creators
+  const wheel2SourceCreators = isSecondaryActive ? secondaryCreators : creators
 
   // Load from localStorage
   useEffect(() => {
     const savedCreators = localStorage.getItem('wheel-creators')
+    const savedSecondaryCreators = localStorage.getItem('wheel-creators-2')
     const savedImpediments = localStorage.getItem('wheel-impediments')
     const savedHistory = localStorage.getItem('wheel-history')
     const savedWheel1Rigged = localStorage.getItem('wheel-1-rigged')
@@ -64,6 +68,15 @@ function App() {
         setCreators(parsed)
       } catch (e) {
         console.error('Failed to load creators', e)
+      }
+    }
+
+    if (savedSecondaryCreators) {
+      try {
+        const parsed = JSON.parse(savedSecondaryCreators)
+        setSecondaryCreators(parsed)
+      } catch (e) {
+        console.error('Failed to load secondary creators', e)
       }
     }
 
@@ -132,7 +145,7 @@ function App() {
 
   // Validate rigged creators exist in current creators list
   useEffect(() => {
-    if (wheel1Rigged && creators.length > 0) {
+    if (wheel1Rigged) {
       const exists = creators.some((c) => c.id === wheel1Rigged.id)
       if (!exists) {
         setWheel1Rigged(null)
@@ -141,20 +154,37 @@ function App() {
   }, [creators, wheel1Rigged])
 
   useEffect(() => {
-    if (wheel2Rigged && creators.length > 0) {
-      const exists = creators.some((c) => c.id === wheel2Rigged.id)
+    if (wheel2Rigged) {
+      const exists = wheel2SourceCreators.some((c) => c.id === wheel2Rigged.id)
       if (!exists) {
         setWheel2Rigged(null)
       }
     }
-  }, [creators, wheel2Rigged])
+  }, [wheel2Rigged, wheel2SourceCreators])
 
   // Save to localStorage
   useEffect(() => {
-    if (typeof window !== 'undefined' && creators.length > 0) {
-      localStorage.setItem('wheel-creators', JSON.stringify(creators))
+    if (typeof window !== 'undefined') {
+      if (creators.length > 0) {
+        localStorage.setItem('wheel-creators', JSON.stringify(creators))
+      } else {
+        localStorage.removeItem('wheel-creators')
+      }
     }
   }, [creators])
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      if (secondaryCreators.length > 0) {
+        localStorage.setItem(
+          'wheel-creators-2',
+          JSON.stringify(secondaryCreators),
+        )
+      } else {
+        localStorage.removeItem('wheel-creators-2')
+      }
+    }
+  }, [secondaryCreators])
 
   useEffect(() => {
     if (typeof window !== 'undefined' && impediments.length > 0) {
@@ -241,24 +271,30 @@ function App() {
 
   // Update wheel creators immediately when settings change
   useEffect(() => {
-    if (creators.length === 0) {
+    if (wheel1SourceCreators.length === 0) {
       setWheel1Creators([])
-      setWheel2Creators([])
-      return
+    } else {
+      const wheel1Selected = getRandomCreators(wheel1SourceCreators, wheel1Rigged)
+      setWheel1Creators(wheel1Selected)
     }
 
-    // Update wheel 1 creators based on current settings
-    const wheel1Selected = getRandomCreators(creators, wheel1Rigged)
-    setWheel1Creators(wheel1Selected)
-
-    // Update wheel 2 creators based on current settings
-    const wheel2Selected = getRandomCreators(creators, wheel2Rigged)
-    setWheel2Creators(wheel2Selected)
-  }, [getRandomCreators, creators, wheel1Rigged, wheel2Rigged])
+    if (wheel2SourceCreators.length === 0) {
+      setWheel2Creators([])
+    } else {
+      const wheel2Selected = getRandomCreators(wheel2SourceCreators, wheel2Rigged)
+      setWheel2Creators(wheel2Selected)
+    }
+  }, [
+    getRandomCreators,
+    wheel1SourceCreators,
+    wheel2SourceCreators,
+    wheel1Rigged,
+    wheel2Rigged,
+  ])
 
   const handleSpinWheel1 = () => {
-    if (creators.length === 0) return
-    const selectedCreators = getRandomCreators(creators, wheel1Rigged)
+    if (wheel1SourceCreators.length === 0) return
+    const selectedCreators = getRandomCreators(wheel1SourceCreators, wheel1Rigged)
     setWheel1Creators(selectedCreators)
     setWheel1Spinning(true)
     setBothWheelsSpinning(false)
@@ -268,8 +304,8 @@ function App() {
   }
 
   const handleSpinWheel2 = () => {
-    if (creators.length === 0) return
-    const selectedCreators = getRandomCreators(creators, wheel2Rigged)
+    if (wheel2SourceCreators.length === 0) return
+    const selectedCreators = getRandomCreators(wheel2SourceCreators, wheel2Rigged)
     setWheel2Creators(selectedCreators)
     setWheel2Spinning(true)
     setBothWheelsSpinning(false)
@@ -279,24 +315,28 @@ function App() {
   }
 
   const handleRandomizeWheel1 = () => {
-    if (creators.length === 0) return
-    const selectedCreators = getRandomCreators(creators, wheel1Rigged)
+    if (wheel1SourceCreators.length === 0) return
+    const selectedCreators = getRandomCreators(wheel1SourceCreators, wheel1Rigged)
     setWheel1Creators(selectedCreators)
   }
 
   const handleRandomizeWheel2 = () => {
-    if (creators.length === 0) return
-    const selectedCreators = getRandomCreators(creators, wheel2Rigged)
+    if (wheel2SourceCreators.length === 0) return
+    const selectedCreators = getRandomCreators(wheel2SourceCreators, wheel2Rigged)
     setWheel2Creators(selectedCreators)
   }
 
-  const shouldShowRandomizeButtons =
-    maxCreatorsToShow > 0 && maxCreatorsToShow < creators.length
+  const shouldShowRandomizeWheel1 =
+    maxCreatorsToShow > 0 && maxCreatorsToShow < wheel1SourceCreators.length
+  const shouldShowRandomizeWheel2 =
+    maxCreatorsToShow > 0 && maxCreatorsToShow < wheel2SourceCreators.length
 
   const handleSpinBoth = () => {
-    if (creators.length === 0) return
-    const selectedCreators1 = getRandomCreators(creators, wheel1Rigged)
-    const selectedCreators2 = getRandomCreators(creators, wheel2Rigged)
+    if (wheel1SourceCreators.length === 0 || wheel2SourceCreators.length === 0) {
+      return
+    }
+    const selectedCreators1 = getRandomCreators(wheel1SourceCreators, wheel1Rigged)
+    const selectedCreators2 = getRandomCreators(wheel2SourceCreators, wheel2Rigged)
     setWheel1Creators(selectedCreators1)
     setWheel2Creators(selectedCreators2)
     setWheel1Spinning(true)
@@ -392,9 +432,11 @@ function App() {
     setBothWheelsSpinning(false)
   }
 
-  const canSpinWheel1 = creators.length > 0 && !wheel1Spinning
-  const canSpinWheel2 = creators.length > 0 && !wheel2Spinning
-  const canSpinBoth = creators.length > 0 && !wheel1Spinning && !wheel2Spinning
+  const canSpinBoth =
+    wheel1SourceCreators.length > 0 &&
+    wheel2SourceCreators.length > 0 &&
+    !wheel1Spinning &&
+    !wheel2Spinning
 
   return (
     <div className="min-h-screen bg-background p-4 md:p-8">
@@ -424,7 +466,9 @@ function App() {
                 <h2 className="text-xl font-semibold">Koło 1</h2>
                 <Wheel
                   creators={
-                    wheel1Creators.length > 0 ? wheel1Creators : creators
+                    wheel1Creators.length > 0
+                      ? wheel1Creators
+                      : wheel1SourceCreators
                   }
                   onSpinEnd={handleWheel1SpinEnd}
                   isSpinning={wheel1Spinning}
@@ -433,7 +477,7 @@ function App() {
                   riggedCreator={wheel1Rigged}
                   onClick={handleSpinWheel1}
                 />
-                {shouldShowRandomizeButtons && (
+                {shouldShowRandomizeWheel1 && (
                   <div className="flex flex-col gap-2 w-full items-center">
                     <Button
                       onClick={handleRandomizeWheel1}
@@ -454,7 +498,9 @@ function App() {
                 <h2 className="text-xl font-semibold">Koło 2</h2>
                 <Wheel
                   creators={
-                    wheel2Creators.length > 0 ? wheel2Creators : creators
+                    wheel2Creators.length > 0
+                      ? wheel2Creators
+                      : wheel2SourceCreators
                   }
                   onSpinEnd={handleWheel2SpinEnd}
                   isSpinning={wheel2Spinning}
@@ -463,7 +509,7 @@ function App() {
                   riggedCreator={wheel2Rigged}
                   onClick={handleSpinWheel2}
                 />
-                {shouldShowRandomizeButtons && (
+                {shouldShowRandomizeWheel2 && (
                   <div className="flex flex-col gap-2 w-full items-center">
                     <Button
                       onClick={handleRandomizeWheel2}
@@ -586,6 +632,8 @@ function App() {
         onOpenChange={setShowSettings}
         creators={creators}
         onCreatorsChange={setCreators}
+        secondaryCreators={secondaryCreators}
+        onSecondaryCreatorsChange={setSecondaryCreators}
         impediments={impediments}
         onImpedimentsChange={setImpediments}
         wheel1Rigged={wheel1Rigged}

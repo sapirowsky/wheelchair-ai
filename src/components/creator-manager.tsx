@@ -10,9 +10,18 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 interface CreatorManagerProps {
   creators: Array<Creator>;
   onCreatorsChange: (creators: Array<Creator>) => void;
+  title?: string;
+  emptyMessage?: string;
+  bulkHint?: string;
 }
 
-export function CreatorManager({ creators, onCreatorsChange }: CreatorManagerProps) {
+export function CreatorManager({
+  creators,
+  onCreatorsChange,
+  title = "Zarządzaj twórcami",
+  emptyMessage = "Nie dodano jeszcze żadnych twórców",
+  bulkHint = "Wklej wiele nazw użytkowników, po jednej w linii. Adresy URL YouTube zostaną wygenerowane automatycznie.",
+}: CreatorManagerProps) {
   const [username, setUsername] = useState("");
   const [youtubeUrl, setYoutubeUrl] = useState("");
   const [bulkUsernames, setBulkUsernames] = useState("");
@@ -23,7 +32,11 @@ export function CreatorManager({ creators, onCreatorsChange }: CreatorManagerPro
     const newCreator: Creator = {
       id: Date.now().toString(),
       username: username.trim(),
-      youtubeUrl: youtubeUrl.trim() || `https://www.youtube.com/results?search_query=${encodeURIComponent(username.trim())}`,
+      youtubeUrl:
+        youtubeUrl.trim() ||
+        `https://www.youtube.com/results?search_query=${encodeURIComponent(
+          username.trim(),
+        )}`,
     };
 
     onCreatorsChange([...creators, newCreator]);
@@ -43,7 +56,7 @@ export function CreatorManager({ creators, onCreatorsChange }: CreatorManagerPro
 
     const newCreators: Creator[] = lines.map((username) => ({
       id: `${Date.now()}-${Math.random()}`,
-      username: username,
+      username,
       youtubeUrl: `https://www.youtube.com/results?search_query=${encodeURIComponent(username)}`,
     }));
 
@@ -58,13 +71,13 @@ export function CreatorManager({ creators, onCreatorsChange }: CreatorManagerPro
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Zarządzaj Twórcami</CardTitle>
+        <CardTitle>{title}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <Tabs defaultValue="single" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="single">Dodaj Pojedynczo</TabsTrigger>
-            <TabsTrigger value="bulk">Import Masowy</TabsTrigger>
+            <TabsTrigger value="single">Dodaj pojedynczo</TabsTrigger>
+            <TabsTrigger value="bulk">Import masowy</TabsTrigger>
           </TabsList>
           <TabsContent value="single" className="space-y-2">
             <div className="flex gap-2">
@@ -99,11 +112,9 @@ export function CreatorManager({ creators, onCreatorsChange }: CreatorManagerPro
                 className="w-full"
               >
                 <Upload className="w-4 h-4 mr-2" />
-                Dodaj Wszystkich
+                Dodaj wszystkich
               </Button>
-              <p className="text-xs text-muted-foreground">
-                Wklej wiele nazw użytkowników, po jednej w linii. Adresy URL YouTube zostaną wygenerowane automatycznie.
-              </p>
+              <p className="text-xs text-muted-foreground">{bulkHint}</p>
             </div>
           </TabsContent>
         </Tabs>
@@ -111,7 +122,7 @@ export function CreatorManager({ creators, onCreatorsChange }: CreatorManagerPro
         <div className="space-y-2 max-h-60 overflow-y-auto">
           {creators.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-4">
-              Nie dodano jeszcze żadnych twórców
+              {emptyMessage}
             </p>
           ) : (
             <>
@@ -150,4 +161,3 @@ export function CreatorManager({ creators, onCreatorsChange }: CreatorManagerPro
     </Card>
   );
 }
-
