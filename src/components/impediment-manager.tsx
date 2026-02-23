@@ -1,65 +1,65 @@
-import { useState } from "react";
-import { Plus, Trash2, Upload } from "lucide-react";
-import type { Impediment } from "./wheel";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useState } from 'react'
+import { Plus, Trash2, Upload } from 'lucide-react'
+import type { Impediment } from './wheel'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
 interface ImpedimentManagerProps {
-  impediments: Array<Impediment>;
-  onImpedimentsChange: (impediments: Array<Impediment>) => void;
+  impediments: Array<Impediment>
+  onImpedimentsChange: (impediments: Array<Impediment>) => void
 }
 
 export function ImpedimentManager({
   impediments,
   onImpedimentsChange,
 }: ImpedimentManagerProps) {
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [bulkNames, setBulkNames] = useState("");
+  const [name, setName] = useState('')
+  const [description, setDescription] = useState('')
+  const [bulkNames, setBulkNames] = useState('')
 
   const handleAdd = () => {
-    if (!name.trim()) return;
+    if (!name.trim()) return
 
     const newImpediment: Impediment = {
       id: Date.now().toString(),
       name: name.trim(),
       description: description.trim() || undefined,
-    };
+    }
 
-    onImpedimentsChange([...impediments, newImpediment]);
-    setName("");
-    setDescription("");
-  };
+    onImpedimentsChange([...impediments, newImpediment])
+    setName('')
+    setDescription('')
+  }
 
   const handleBulkAdd = () => {
-    if (!bulkNames.trim()) return;
+    if (!bulkNames.trim()) return
 
     const lines = bulkNames
-      .split("\n")
+      .split('\n')
       .map((line) => line.trim())
-      .filter((line) => line.length > 0);
+      .filter((line) => line.length > 0)
 
-    if (lines.length === 0) return;
+    if (lines.length === 0) return
 
-    const newImpediments: Impediment[] = lines.map((name) => ({
+    const newImpediments: Array<Impediment> = lines.map((name) => ({
       id: `${Date.now()}-${Math.random()}`,
       name,
-    }));
+    }))
 
-    onImpedimentsChange([...impediments, ...newImpediments]);
-    setBulkNames("");
-  };
+    onImpedimentsChange([...impediments, ...newImpediments])
+    setBulkNames('')
+  }
 
   const handleDelete = (id: string) => {
-    onImpedimentsChange(impediments.filter((i) => i.id !== id));
-  };
+    onImpedimentsChange(impediments.filter((i) => i.id !== id))
+  }
 
   const handleDeleteAll = () => {
-    onImpedimentsChange([]);
-  };
+    onImpedimentsChange([])
+  }
 
   return (
     <Card>
@@ -78,13 +78,13 @@ export function ImpedimentManager({
                 placeholder="Nazwa przeszkody"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleAdd()}
+                onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
               />
               <Input
                 placeholder="Opis (opcjonalne)"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleAdd()}
+                onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
               />
               <Button onClick={handleAdd} disabled={!name.trim()}>
                 <Plus className="w-4 h-4 mr-2" />
@@ -162,5 +162,5 @@ export function ImpedimentManager({
         </div>
       </CardContent>
     </Card>
-  );
+  )
 }

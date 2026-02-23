@@ -1,33 +1,33 @@
-import { useState } from "react";
-import { Plus, Trash2, Upload } from "lucide-react";
-import type { Creator } from "./wheel";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useState } from 'react'
+import { Plus, Trash2, Upload } from 'lucide-react'
+import type { Creator } from './wheel'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
 interface CreatorManagerProps {
-  creators: Array<Creator>;
-  onCreatorsChange: (creators: Array<Creator>) => void;
-  title?: string;
-  emptyMessage?: string;
-  bulkHint?: string;
+  creators: Array<Creator>
+  onCreatorsChange: (creators: Array<Creator>) => void
+  title?: string
+  emptyMessage?: string
+  bulkHint?: string
 }
 
 export function CreatorManager({
   creators,
   onCreatorsChange,
-  title = "Zarządzaj twórcami",
-  emptyMessage = "Nie dodano jeszcze żadnych twórców",
-  bulkHint = "Wklej wiele nazw użytkowników, po jednej w linii. Adresy URL YouTube zostaną wygenerowane automatycznie.",
+  title = 'Zarządzaj twórcami',
+  emptyMessage = 'Nie dodano jeszcze żadnych twórców',
+  bulkHint = 'Wklej wiele nazw użytkowników, po jednej w linii. Adresy URL YouTube zostaną wygenerowane automatycznie.',
 }: CreatorManagerProps) {
-  const [username, setUsername] = useState("");
-  const [youtubeUrl, setYoutubeUrl] = useState("");
-  const [bulkUsernames, setBulkUsernames] = useState("");
+  const [username, setUsername] = useState('')
+  const [youtubeUrl, setYoutubeUrl] = useState('')
+  const [bulkUsernames, setBulkUsernames] = useState('')
 
   const handleAdd = () => {
-    if (!username.trim()) return;
+    if (!username.trim()) return
 
     const newCreator: Creator = {
       id: Date.now().toString(),
@@ -37,40 +37,40 @@ export function CreatorManager({
         `https://www.youtube.com/results?search_query=${encodeURIComponent(
           username.trim(),
         )}`,
-    };
+    }
 
-    onCreatorsChange([...creators, newCreator]);
-    setUsername("");
-    setYoutubeUrl("");
-  };
+    onCreatorsChange([...creators, newCreator])
+    setUsername('')
+    setYoutubeUrl('')
+  }
 
   const handleBulkAdd = () => {
-    if (!bulkUsernames.trim()) return;
+    if (!bulkUsernames.trim()) return
 
     const lines = bulkUsernames
-      .split("\n")
+      .split('\n')
       .map((line) => line.trim())
-      .filter((line) => line.length > 0);
+      .filter((line) => line.length > 0)
 
-    if (lines.length === 0) return;
+    if (lines.length === 0) return
 
-    const newCreators: Creator[] = lines.map((username) => ({
+    const newCreators: Array<Creator> = lines.map((username) => ({
       id: `${Date.now()}-${Math.random()}`,
       username,
       youtubeUrl: `https://www.youtube.com/results?search_query=${encodeURIComponent(username)}`,
-    }));
+    }))
 
-    onCreatorsChange([...creators, ...newCreators]);
-    setBulkUsernames("");
-  };
+    onCreatorsChange([...creators, ...newCreators])
+    setBulkUsernames('')
+  }
 
   const handleDelete = (id: string) => {
-    onCreatorsChange(creators.filter((c) => c.id !== id));
-  };
+    onCreatorsChange(creators.filter((c) => c.id !== id))
+  }
 
   const handleDeleteAll = () => {
-    onCreatorsChange([]);
-  };
+    onCreatorsChange([])
+  }
 
   return (
     <Card>
@@ -89,13 +89,13 @@ export function CreatorManager({
                 placeholder="Nazwa użytkownika"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleAdd()}
+                onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
               />
               <Input
                 placeholder="URL YouTube (opcjonalne)"
                 value={youtubeUrl}
                 onChange={(e) => setYoutubeUrl(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleAdd()}
+                onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
               />
               <Button onClick={handleAdd} disabled={!username.trim()}>
                 <Plus className="w-4 h-4" />
@@ -173,5 +173,5 @@ export function CreatorManager({
         </div>
       </CardContent>
     </Card>
-  );
+  )
 }
