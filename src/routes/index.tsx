@@ -552,7 +552,7 @@ function App() {
             <AlertDialogTitle className="flex justify-end w-full">
               <Button onClick={handleModalClose}>X</Button>
             </AlertDialogTitle>
-            <AlertDialogDescription className="w-full px-20 pb-6">
+            <AlertDialogDescription className="w-full px-20 pb-6" render={<div />}>
               <div className="space-y-4 mt-4 w-full flex flex-col gap-4 text-nowrap">
                 <div className="flex gap-4 w-full">
                   {wheel1Result && (
