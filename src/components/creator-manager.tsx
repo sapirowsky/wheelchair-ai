@@ -54,10 +54,10 @@ export function CreatorManager({
 
     if (lines.length === 0) return
 
-    const newCreators: Array<Creator> = lines.map((username) => ({
+    const newCreators: Array<Creator> = lines.map((line) => ({
       id: `${Date.now()}-${Math.random()}`,
-      username,
-      youtubeUrl: `https://www.youtube.com/results?search_query=${encodeURIComponent(username)}`,
+      username: line,
+      youtubeUrl: `https://www.youtube.com/results?search_query=${encodeURIComponent(line)}`,
     }))
 
     onCreatorsChange([...creators, ...newCreators])

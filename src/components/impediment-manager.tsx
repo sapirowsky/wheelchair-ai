@@ -44,9 +44,9 @@ export function ImpedimentManager({
 
     if (lines.length === 0) return
 
-    const newImpediments: Array<Impediment> = lines.map((name) => ({
+    const newImpediments: Array<Impediment> = lines.map((line) => ({
       id: `${Date.now()}-${Math.random()}`,
-      name,
+      name: line,
     }))
 
     onImpedimentsChange([...impediments, ...newImpediments])
